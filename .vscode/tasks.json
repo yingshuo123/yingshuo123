@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Qt: build & run & deploy",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/C",
+        "for %i in (\"${workspaceFolder}\\*.pro\") do (set PRO=%~ni) & call \"E:\\qt\\5.14.2\\mingw73_32\\bin\\qtenv2.bat\" & cd /d \"${workspaceFolder}\\build-vs\" & qmake \"../%~ni.pro\" -spec win32-g++ CONFIG+=debug CONFIG+=qml_debug & mingw32-make -j${env:number_of_processors} -f Makefile.Debug & for %f in (debug\\*.exe) do (windeployqt %f & start \"\" %f)"
+      ],
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/C"]
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Qt: clean",
+      "type": "shell",
+      "command": "cmd",
+      "args": [
+        "/C",
+        "call \"E:\\qt\\5.14.2\\mingw73_32\\bin\\qtenv2.bat\" & cd /d \"${workspaceFolder}\\build-vs\" & mingw32-make -f Makefile.Debug clean"
+      ],
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/C"]
+        }
+      },
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
