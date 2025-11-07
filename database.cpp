@@ -100,14 +100,15 @@ void DatabaseManager::addDefaultUser()
 bool DatabaseManager::validateUser(const QString &username, const QString &password)
 {
     if (!m_database.isOpen()) {
-        qDebug() << "数据库未连接";
+        qDebug() << "数据库未连接，验证用户失败";
         return false;
     }
     
-    QSqlQuery query;
+    QSqlQuery query(m_database); // 确保查询使用正确的数据库连接
     query.prepare("SELECT * FROM users WHERE username = :username AND password = :password");
     query.bindValue(":username", username);
-    query.bindValue(":password", password); // 实际应用中应该使用哈希算法验证
+    query.bindValue(":password", password);
+    qDebug() << "验证用户: " << username; // 实际应用中应该使用哈希算法验证
     
     if (!query.exec()) {
         qDebug() << "验证用户查询失败:" << query.lastError().text();
@@ -120,22 +121,32 @@ bool DatabaseManager::validateUser(const QString &username, const QString &passw
 
 bool DatabaseManager::registerUser(const QString &username, const QString &password)
 {
+    qDebug() << "开始注册用户: " << username;
+    
     if (!m_database.isOpen()) {
         qDebug() << "数据库未连接";
         return false;
     }
     
+    // 显示数据库信息
+    qDebug() << "数据库连接状态: 已连接";
+    qDebug() << "数据库名称: " << m_database.databaseName();
+    
     // 检查用户名是否已存在
-    if (isUsernameExists(username)) {
-        qDebug() << "用户名已存在";
+    bool exists = isUsernameExists(username);
+    qDebug() << "用户名" << username << "是否已存在: " << (exists ? "是" : "否");
+    
+    if (exists) {
         return false;
     }
     
     // 插入新用户
-    QSqlQuery query;
+    QSqlQuery query(m_database); // 确保查询使用正确的数据库连接
     query.prepare("INSERT INTO users (username, password) VALUES (:username, :password)");
     query.bindValue(":username", username);
     query.bindValue(":password", password); // 实际应用中应该使用哈希算法加密
+    
+    qDebug() << "准备执行SQL插入语句";
     
     if (!query.exec()) {
         qDebug() << "注册用户失败:" << query.lastError().text();
@@ -153,17 +164,20 @@ bool DatabaseManager::isUsernameExists(const QString &username)
         return false;
     }
     
-    QSqlQuery query;
+    QSqlQuery query(m_database); // 确保查询使用正确的数据库连接
     query.prepare("SELECT * FROM users WHERE username = :username");
     query.bindValue(":username", username);
+    qDebug() << "检查用户名是否存在: " << username;
     
     if (!query.exec()) {
-        qDebug() << "检查用户名失败:" << query.lastError().text();
+        qDebug() << "查询用户名是否存在失败: " << query.lastError().text();
         return false;
     }
     
+    bool result = query.next();
+    qDebug() << "用户名查询结果: " << (result ? "存在" : "不存在");
     // 如果查询返回结果，则用户名已存在
-    return query.next();
+    return result;
 }
 
 bool DatabaseManager::isConnected() const
